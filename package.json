@@ -6,9 +6,9 @@
   "scripts": {
     "init": "npm install && cp .env.example .env",
     "lint": "npx eslint src/**/*.ts",
+    "start": "ts-node src/app.ts",
     "build": "tsc",
     "dev": "ts-node-dev src/app.ts",
-    "start": "ts-node src/app.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Ivan Fonin",
