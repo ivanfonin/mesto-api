@@ -1,4 +1,8 @@
 import express from 'express';
+import { config } from 'dotenv';
+
+// Загружаем конфигурацию
+config();
 
 // Инициализируем Express
 const { PORT = 3000 } = process.env;
