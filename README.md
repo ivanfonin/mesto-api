@@ -7,7 +7,7 @@
 
 ## Инструкции по установке
 Для клонирования приложения выполните команду:
-`git clone https://github.com/ivanfonin/mesto-project-plus/`
+`git clone https://github.com/ivanfonin/mesto-api/`
 
 После клонирования приложения запустите команду `npm run init`, данная команда установит зависимости приложения `npm install` и скопирует файл `.env.example` в `.env`, после чего отредактируйте базовые настройки приложения в `.env`.
 
