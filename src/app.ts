@@ -1,17 +1,19 @@
 import express from 'express';
 import { config } from 'dotenv';
+import database from './database';
 import temporaryAuthMiddleware from './middlewares/temporaryAuthMiddleware';
 import usersRouter from './routes/users';
-import db from './database/database';
+import cardsRouter from './routes/cards';
+
+const { PORT = 3000 } = process.env;
 
 // Загружаем конфигурацию
 config();
 
 // Подключаемся к БД
-db.connect();
+database.connect();
 
 // Инициализируем Express
-const { PORT = 3000 } = process.env;
 const app = express();
 
 // Настройки Express
@@ -22,6 +24,7 @@ app.use(temporaryAuthMiddleware);
 
 // API
 app.use('/users', usersRouter);
+app.use('/cards', cardsRouter);
 
 // Запускаем сервер
 app.listen(PORT, () => {});
