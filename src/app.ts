@@ -1,10 +1,7 @@
 import express from 'express';
 import { config } from 'dotenv';
 import database from './database';
-import temporaryAuthMiddleware from './middlewares/temporaryAuthMiddleware';
-import usersRouter from './routes/users';
-import cardsRouter from './routes/cards';
-import globalErrorHandler from './middlewares/globalErrorHandler';
+import routes from './routes';
 
 const { PORT = 3000 } = process.env;
 
@@ -20,15 +17,8 @@ const app = express();
 // Настройки Express
 app.use(express.json());
 
-// Временный мидлвар авторизации
-app.use(temporaryAuthMiddleware);
-
-// API
-app.use('/users', usersRouter);
-app.use('/cards', cardsRouter);
-
-// Централизованная обработка ошибок
-app.use(globalErrorHandler);
+// Роутер
+app.use(routes);
 
 // Запускаем сервер
 app.listen(PORT, () => {});
