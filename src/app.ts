@@ -6,7 +6,7 @@ import db from './database/database';
 config();
 
 // Подключаемся к БД
-db.init();
+db.connect();
 
 // Инициализируем Express
 const { PORT = 3000 } = process.env;
