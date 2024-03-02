@@ -1,6 +1,6 @@
 const temporaryAuthMiddleware = (req, res, next) => {
   req.user = {
-    _id: '65e32432def0b10ca366efb3',
+    _id: process.env.USER_ID || '',
   };
 
   next();
