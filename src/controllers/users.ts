@@ -38,16 +38,30 @@ export const postUser = (req: Request, res: Response, next: NextFunction) => {
     .catch(next);
 };
 
-export const patchUser = (
+type TUpdateAction = 'info' | 'avatar';
+
+const updateProfile = (action: TUpdateAction) => (
   req: Request & { user?: { _id: string } },
   res: Response,
   next: NextFunction,
 ) => {
-  const { name, about } = req.body;
+  let fields: {
+    name?: string,
+    about?: string,
+    avatar?: string,
+  } = {};
+
+  if (action === 'info') {
+    const { name, about } = req.body;
+    fields = { name, about };
+  } else if (action === 'avatar') {
+    const { avatar } = req.body;
+    fields = { avatar };
+  }
 
   User.findByIdAndUpdate(
     req.user?._id,
-    { name, about },
+    fields,
     { new: true },
   )
     .then((user) => {
@@ -59,23 +73,5 @@ export const patchUser = (
     .catch(next);
 };
 
-export const patchAvatar = (
-  req: Request & { user?: { _id: string } },
-  res: Response,
-  next: NextFunction,
-) => {
-  const { avatar } = req.body;
-
-  User.findByIdAndUpdate(
-    req.user?._id,
-    { avatar },
-    { new: true },
-  )
-    .then((user) => {
-      if (!user) {
-        throw new RequestError('Не удалось обновить аватар');
-      }
-      res.send(user);
-    })
-    .catch(next);
-};
+export const patchUser = updateProfile('info');
+export const patchAvatar = updateProfile('avatar');
