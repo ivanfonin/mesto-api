@@ -36,7 +36,7 @@ export const getUser = async (req: Request, res: Response) => {
   }
 };
 
-export const postUser = (req: Request, res: Response, next: NextFunction) => {
+export const postUser = (req: Request, res: Response) => {
   const { name, about, avatar } = req.body;
 
   User.create({
@@ -47,9 +47,23 @@ export const postUser = (req: Request, res: Response, next: NextFunction) => {
     if (!user) {
       throw new RequestError('Не удалось создать пользователя');
     }
-    res.status(constants.HTTP_STATUS_CREATED).send(user);
+    return res.status(constants.HTTP_STATUS_CREATED).send(user);
   })
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof mongoose.Error.ValidationError) {
+        return res
+          .status(constants.HTTP_STATUS_BAD_REQUEST)
+          .send({ message: 'Не корректные данные в запросе' });
+      }
+      if (err instanceof RequestError) {
+        return res
+          .status(constants.HTTP_STATUS_BAD_REQUEST)
+          .send({ message: err.message });
+      }
+      return res
+        .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send({ message: 'На сервере произошла ошибка' });
+    });
 };
 
 type TUpdateAction = 'info' | 'avatar';
@@ -79,6 +93,11 @@ const updateProfile = (action: TUpdateAction) => async (
 
     return res.status(constants.HTTP_STATUS_OK).send(user);
   } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError) {
+      return res
+        .status(constants.HTTP_STATUS_BAD_REQUEST)
+        .send({ message: 'Не корректные данные в запросе' });
+    }
     if (err instanceof RequestError) {
       return res
         .status(constants.HTTP_STATUS_BAD_REQUEST)

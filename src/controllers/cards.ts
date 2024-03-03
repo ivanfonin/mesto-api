@@ -14,7 +14,6 @@ export const getCards = (req: Request, res: Response, next: NextFunction) => {
 export const postCard = (
   req: Request & { user?: { _id: string } },
   res: Response,
-  next: NextFunction,
 ) => {
   const { name, link } = req.body;
 
@@ -26,9 +25,23 @@ export const postCard = (
     if (!card) {
       throw new RequestError('Не удалось создать карточку');
     }
-    res.status(constants.HTTP_STATUS_CREATED).send(card);
+    return res.status(constants.HTTP_STATUS_CREATED).send(card);
   })
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof mongoose.Error.ValidationError) {
+        return res
+          .status(constants.HTTP_STATUS_BAD_REQUEST)
+          .send({ message: 'Не корректные данные в запросе' });
+      }
+      if (err instanceof RequestError) {
+        return res
+          .status(constants.HTTP_STATUS_BAD_REQUEST)
+          .send({ message: err.message });
+      }
+      return res
+        .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send({ message: 'На сервере произошла ошибка' });
+    });
 };
 
 export const deleteCard = async (req: Request, res: Response) => {
