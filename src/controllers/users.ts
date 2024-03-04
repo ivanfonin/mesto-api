@@ -2,8 +2,6 @@ import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { constants } from 'http2';
 import User from '../models/user';
-import NotFoundError from '../errors/NotFoundError';
-import RequestError from '../errors/RequestError';
 
 export const getUsers = (req: Request, res: Response, next: NextFunction) => {
   User.find({})
@@ -15,19 +13,22 @@ export const getUser = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
-    const user = await User
-      .findById(id)
-      .orFail(() => new NotFoundError('Пользователь с таким id не найден'));
+    const user = await User.findById(id).orFail();
     return res.status(constants.HTTP_STATUS_OK).send(user);
   } catch (err) {
-    if (err instanceof NotFoundError) {
+    if (err instanceof mongoose.Error.DocumentNotFoundError) {
       return res
         .status(constants.HTTP_STATUS_NOT_FOUND)
-        .send({ message: err.message });
+        .send({ message: 'Пользователь с указанным id не найден' });
+    }
+    if (err instanceof mongoose.Error.ValidationError) {
+      return res
+        .status(constants.HTTP_STATUS_BAD_REQUEST)
+        .send({ message: 'Ошибка валидации данных в запросе' });
     }
     if (err instanceof mongoose.Error.CastError) {
       return res
-        .status(constants.HTTP_STATUS_NOT_FOUND)
+        .status(constants.HTTP_STATUS_BAD_REQUEST)
         .send({ message: 'Не корректный id пользователя' });
     }
     return res
@@ -43,22 +44,17 @@ export const postUser = (req: Request, res: Response) => {
     name,
     about,
     avatar,
-  }).then((user) => {
-    if (!user) {
-      throw new RequestError('Не удалось создать пользователя');
-    }
-    return res.status(constants.HTTP_STATUS_CREATED).send(user);
-  })
+  }).then((user) => res.status(constants.HTTP_STATUS_CREATED).send(user))
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
         return res
           .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Не корректные данные в запросе' });
+          .send({ message: 'Ошибка валидации данных в запросе' });
       }
-      if (err instanceof RequestError) {
+      if (err instanceof mongoose.Error.CastError) {
         return res
           .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: err.message });
+          .send({ message: 'Не корректные данные в запросе' });
       }
       return res
         .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
@@ -87,21 +83,23 @@ const updateProfile = (action: TUpdateAction) => async (
       fields = { avatar };
     }
 
-    const user = await User
-      .findByIdAndUpdate(req.user?._id, fields, { new: true })
-      .orFail(() => new RequestError('Не удалось обновить данные пользователя'));
-
+    const user = await User.findByIdAndUpdate(req.user?._id, fields, { new: true }).orFail();
     return res.status(constants.HTTP_STATUS_OK).send(user);
   } catch (err) {
+    if (err instanceof mongoose.Error.DocumentNotFoundError) {
+      return res
+        .status(constants.HTTP_STATUS_NOT_FOUND)
+        .send({ message: 'Пользователь с указанным id не найден' });
+    }
     if (err instanceof mongoose.Error.ValidationError) {
       return res
         .status(constants.HTTP_STATUS_BAD_REQUEST)
-        .send({ message: 'Не корректные данные в запросе' });
+        .send({ message: 'Ошибка валидации данных в запросе' });
     }
-    if (err instanceof RequestError) {
+    if (err instanceof mongoose.Error.CastError) {
       return res
         .status(constants.HTTP_STATUS_BAD_REQUEST)
-        .send({ message: err.message });
+        .send({ message: 'Не корректный id пользователя' });
     }
     return res
       .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
