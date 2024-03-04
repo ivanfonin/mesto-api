@@ -64,7 +64,7 @@ export const postUser = (req: Request, res: Response) => {
 
 type TUpdateUserAction = 'info' | 'avatar';
 
-const updateProfile = (action: TUpdateUserAction) => async (
+const updateUser = (action: TUpdateUserAction) => async (
   req: Request & { user?: { _id: string } },
   res: Response,
 ) => {
@@ -107,5 +107,5 @@ const updateProfile = (action: TUpdateUserAction) => async (
   }
 };
 
-export const patchUser = updateProfile('info');
-export const patchAvatar = updateProfile('avatar');
+export const patchUser = updateUser('info');
+export const patchAvatar = updateUser('avatar');
