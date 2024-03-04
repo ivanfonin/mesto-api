@@ -62,9 +62,9 @@ export const postUser = (req: Request, res: Response) => {
     });
 };
 
-type TUpdateAction = 'info' | 'avatar';
+type TUpdateUserAction = 'info' | 'avatar';
 
-const updateProfile = (action: TUpdateAction) => async (
+const updateProfile = (action: TUpdateUserAction) => async (
   req: Request & { user?: { _id: string } },
   res: Response,
 ) => {
