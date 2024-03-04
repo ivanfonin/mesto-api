@@ -26,11 +26,6 @@ export const postCard = (
           .status(constants.HTTP_STATUS_BAD_REQUEST)
           .send({ message: 'Ошибка валидации данных в запросе' });
       }
-      if (err instanceof mongoose.Error.CastError) {
-        return res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Не корректные данные в запросе' });
-      }
       return res
         .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
         .send({ message: 'На сервере произошла ошибка' });
@@ -44,15 +39,15 @@ export const deleteCard = async (req: Request, res: Response) => {
     await Card.findByIdAndRemove(cardId).orFail();
     return res.status(constants.HTTP_STATUS_NO_CONTENT).end();
   } catch (err) {
-    if (err instanceof mongoose.Error.DocumentNotFoundError) {
-      return res
-        .status(constants.HTTP_STATUS_NOT_FOUND)
-        .send({ message: 'Карточка с указанным id не найдена' });
-    }
     if (err instanceof mongoose.Error.CastError) {
       return res
         .status(constants.HTTP_STATUS_BAD_REQUEST)
         .send({ message: 'Не корректный id карточки' });
+    }
+    if (err instanceof mongoose.Error.DocumentNotFoundError) {
+      return res
+        .status(constants.HTTP_STATUS_NOT_FOUND)
+        .send({ message: 'Карточка с указанным id не найдена' });
     }
     return res
       .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
@@ -79,11 +74,6 @@ const updateCard = (
     const card = await Card.findByIdAndUpdate(cardId, query, { new: true }).orFail();
     return res.status(constants.HTTP_STATUS_OK).send(card);
   } catch (err) {
-    if (err instanceof mongoose.Error.DocumentNotFoundError) {
-      return res
-        .status(constants.HTTP_STATUS_NOT_FOUND)
-        .send({ message: 'Карточка с указанным id не найдена' });
-    }
     if (err instanceof mongoose.Error.ValidationError) {
       return res
         .status(constants.HTTP_STATUS_BAD_REQUEST)
@@ -93,6 +83,11 @@ const updateCard = (
       return res
         .status(constants.HTTP_STATUS_BAD_REQUEST)
         .send({ message: 'Не корректный id карточки' });
+    }
+    if (err instanceof mongoose.Error.DocumentNotFoundError) {
+      return res
+        .status(constants.HTTP_STATUS_NOT_FOUND)
+        .send({ message: 'Карточка с указанным id не найдена' });
     }
     return res
       .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)

@@ -16,20 +16,15 @@ export const getUser = async (req: Request, res: Response) => {
     const user = await User.findById(id).orFail();
     return res.status(constants.HTTP_STATUS_OK).send(user);
   } catch (err) {
-    if (err instanceof mongoose.Error.DocumentNotFoundError) {
-      return res
-        .status(constants.HTTP_STATUS_NOT_FOUND)
-        .send({ message: 'Пользователь с указанным id не найден' });
-    }
-    if (err instanceof mongoose.Error.ValidationError) {
-      return res
-        .status(constants.HTTP_STATUS_BAD_REQUEST)
-        .send({ message: 'Ошибка валидации данных в запросе' });
-    }
     if (err instanceof mongoose.Error.CastError) {
       return res
         .status(constants.HTTP_STATUS_BAD_REQUEST)
         .send({ message: 'Не корректный id пользователя' });
+    }
+    if (err instanceof mongoose.Error.DocumentNotFoundError) {
+      return res
+        .status(constants.HTTP_STATUS_NOT_FOUND)
+        .send({ message: 'Пользователь с указанным id не найден' });
     }
     return res
       .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
@@ -50,11 +45,6 @@ export const postUser = (req: Request, res: Response) => {
         return res
           .status(constants.HTTP_STATUS_BAD_REQUEST)
           .send({ message: 'Ошибка валидации данных в запросе' });
-      }
-      if (err instanceof mongoose.Error.CastError) {
-        return res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Не корректные данные в запросе' });
       }
       return res
         .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
@@ -86,20 +76,15 @@ const updateUser = (action: TUpdateUserAction) => async (
     const user = await User.findByIdAndUpdate(req.user?._id, fields, { new: true }).orFail();
     return res.status(constants.HTTP_STATUS_OK).send(user);
   } catch (err) {
-    if (err instanceof mongoose.Error.DocumentNotFoundError) {
-      return res
-        .status(constants.HTTP_STATUS_NOT_FOUND)
-        .send({ message: 'Пользователь с указанным id не найден' });
-    }
     if (err instanceof mongoose.Error.ValidationError) {
       return res
         .status(constants.HTTP_STATUS_BAD_REQUEST)
         .send({ message: 'Ошибка валидации данных в запросе' });
     }
-    if (err instanceof mongoose.Error.CastError) {
+    if (err instanceof mongoose.Error.DocumentNotFoundError) {
       return res
-        .status(constants.HTTP_STATUS_BAD_REQUEST)
-        .send({ message: 'Не корректный id пользователя' });
+        .status(constants.HTTP_STATUS_NOT_FOUND)
+        .send({ message: 'Пользователь с указанным id не найден' });
     }
     return res
       .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
