@@ -2,6 +2,37 @@ import { NextFunction, Request, Response } from 'express';
 import mongoose from 'mongoose';
 import { constants } from 'http2';
 import User from '../models/user';
+import { AuthRequest } from '../middlewares/auth';
+
+export const getAuthUser = async (req: AuthRequest, res: Response) => {
+  const { user } = req;
+
+  if (user && '_id' in user) {
+    const id = user._id;
+    try {
+      const authUser = await User.findById(id).orFail();
+      return res.status(constants.HTTP_STATUS_OK).send(authUser);
+    } catch (err) {
+      if (err instanceof mongoose.Error.CastError) {
+        return res
+          .status(constants.HTTP_STATUS_BAD_REQUEST)
+          .send({ message: 'Не корректный id пользователя' });
+      }
+      if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        return res
+          .status(constants.HTTP_STATUS_NOT_FOUND)
+          .send({ message: 'Пользователь с указанным id не найден' });
+      }
+      return res
+        .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+        .send({ message: 'На сервере произошла ошибка' });
+    }
+  } else {
+    return res
+      .status(constants.HTTP_STATUS_UNAUTHORIZED)
+      .send({ message: 'Необходима авторизация' });
+  }
+};
 
 export const getUsers = (req: Request, res: Response, next: NextFunction) => {
   User.find({})

@@ -2,8 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import AuthError from '../errors/AuthError';
 
-interface AuthRequest extends Request {
-  user?: String | JwtPayload;
+export interface AuthRequest extends Request {
+  user?: String | JwtPayload | undefined;
 }
 
 export default (req: AuthRequest, res: Response, next: NextFunction) => {
