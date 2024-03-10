@@ -3,8 +3,9 @@ import mongoose from 'mongoose';
 import { constants } from 'http2';
 import User from '../models/user';
 import { AuthRequest } from '../middlewares/auth';
+import { AuthError, NotFoundError, RequestError } from '../errors';
 
-export const getAuthUser = async (req: AuthRequest, res: Response) => {
+export const getAuthUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const { user } = req;
 
   if (user && '_id' in user) {
@@ -14,23 +15,15 @@ export const getAuthUser = async (req: AuthRequest, res: Response) => {
       return res.status(constants.HTTP_STATUS_OK).send(authUser);
     } catch (err) {
       if (err instanceof mongoose.Error.CastError) {
-        return res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Не корректный id пользователя' });
+        return next(new RequestError('Не корректный id пользователя'));
       }
       if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        return res
-          .status(constants.HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Пользователь с указанным id не найден' });
+        return next(new NotFoundError('Пользователь с указанным id не найден'));
       }
-      return res
-        .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send({ message: 'На сервере произошла ошибка' });
+      return next(new Error('На сервере произошла ошибка'));
     }
   } else {
-    return res
-      .status(constants.HTTP_STATUS_UNAUTHORIZED)
-      .send({ message: 'Необходима авторизация' });
+    return next(new AuthError('Необходима авторизация'));
   }
 };
 
@@ -40,7 +33,7 @@ export const getUsers = (req: Request, res: Response, next: NextFunction) => {
     .catch(next);
 };
 
-export const getUser = async (req: Request, res: Response) => {
+export const getUser = async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
 
   try {
@@ -48,18 +41,12 @@ export const getUser = async (req: Request, res: Response) => {
     return res.status(constants.HTTP_STATUS_OK).send(user);
   } catch (err) {
     if (err instanceof mongoose.Error.CastError) {
-      return res
-        .status(constants.HTTP_STATUS_BAD_REQUEST)
-        .send({ message: 'Не корректный id пользователя' });
+      return next(new RequestError('Не корректный id пользователя'));
     }
     if (err instanceof mongoose.Error.DocumentNotFoundError) {
-      return res
-        .status(constants.HTTP_STATUS_NOT_FOUND)
-        .send({ message: 'Пользователь с указанным id не найден' });
+      return next(new NotFoundError('Пользователь с указанным id не найден'));
     }
-    return res
-      .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-      .send({ message: 'На сервере произошла ошибка' });
+    return next(new Error('На сервере произошла ошибка'));
   }
 };
 
@@ -68,6 +55,7 @@ type TUpdateUserAction = 'info' | 'avatar';
 const updateUser = (action: TUpdateUserAction) => async (
   req: Request & { user?: { _id: string } },
   res: Response,
+  next: NextFunction,
 ) => {
   try {
     let fields: {
@@ -88,18 +76,12 @@ const updateUser = (action: TUpdateUserAction) => async (
     return res.status(constants.HTTP_STATUS_OK).send(user);
   } catch (err) {
     if (err instanceof mongoose.Error.ValidationError) {
-      return res
-        .status(constants.HTTP_STATUS_BAD_REQUEST)
-        .send({ message: 'Ошибка валидации данных в запросе' });
+      return next(new RequestError('Ошибка валидации данных профиля'));
     }
     if (err instanceof mongoose.Error.DocumentNotFoundError) {
-      return res
-        .status(constants.HTTP_STATUS_NOT_FOUND)
-        .send({ message: 'Пользователь с указанным id не найден' });
+      return next(new NotFoundError('Пользователь с указанным id не найден'));
     }
-    return res
-      .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-      .send({ message: 'На сервере произошла ошибка' });
+    return next(new Error('На сервере произошла ошибка'));
   }
 };
 

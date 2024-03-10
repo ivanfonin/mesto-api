@@ -1,19 +1,18 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { constants } from 'http2';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { ConflictError, RequestError } from '../errors';
 import User, { IUser } from '../models/user';
 
-export const createUser = async (req: Request, res: Response) => {
+export const createUser = async (req: Request, res: Response, next: NextFunction) => {
   const {
     email, password, name, about, avatar,
   } = req.body;
 
   if (typeof password !== 'string') {
-    return res
-      .status(constants.HTTP_STATUS_BAD_REQUEST)
-      .send({ message: 'Пароль должен быть строкой' });
+    return next(new RequestError('Пароль должен быть строкой'));
   }
 
   const hash = await bcrypt.hash(password, 10);
@@ -27,27 +26,21 @@ export const createUser = async (req: Request, res: Response) => {
   }).then((user) => res.status(constants.HTTP_STATUS_CREATED).send(user))
     .catch((err) => {
       if (err.code === 11000) {
-        return res
-          .status(constants.HTTP_STATUS_CONFLICT)
-          .send({ message: 'Пользователь с таким email уже зарегистрирован' });
+        return next(new ConflictError('Пользователь с таким email уже зарегистрирован'));
       }
       if (err instanceof mongoose.Error.ValidationError) {
-        return res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Ошибка валидации данных в запросе' });
+        return next(new RequestError('Ошибка валидации данных пользователя'));
       }
-      return res
-        .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-        .send({ message: 'На сервере произошла ошибка' });
+      return next(new Error('На сервере произошла ошибка'));
     });
 };
 
-export const login = (req: Request, res: Response) => {
+export const login = (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
   const { JWT_SECRET } = process.env;
 
   if (!JWT_SECRET) {
-    throw new Error('Ошибка конфигурации JWT');
+    return next(new Error('Ошибка конфигурации JWT'));
   }
 
   return User.findUserByCredentials(email, password)
@@ -57,7 +50,5 @@ export const login = (req: Request, res: Response) => {
       });
       res.send({ token });
     })
-    .catch((err) => res
-      .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-      .send({ message: err.message }));
+    .catch((err) => next(new Error(err.message)));
 };

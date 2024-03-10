@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { constants } from 'http2';
 import { isCelebrateError } from 'celebrate';
-import AppError from '../errors';
+import { AppError } from '../errors';
 
 const globalErrorHandler = (err: AppError, req: Request, res: Response, next: NextFunction) => {
   const {
