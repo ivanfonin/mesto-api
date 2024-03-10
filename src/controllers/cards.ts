@@ -32,22 +32,32 @@ export const postCard = (
     });
 };
 
-export const deleteCard = async (req: Request, res: Response) => {
+export const deleteCard = async (req: Request & { user?: { _id: string } }, res: Response) => {
   const { cardId } = req.params;
+  const userId = req.user?._id;
 
   try {
-    await Card.findByIdAndRemove(cardId).orFail();
+    const card = await Card.findById(cardId).exec();
+
+    if (!card) {
+      return res
+        .status(constants.HTTP_STATUS_NOT_FOUND)
+        .send({ message: 'Карточка с указанным id не найдена' });
+    }
+
+    if (card.owner.toString() !== userId) {
+      return res
+        .status(constants.HTTP_STATUS_FORBIDDEN)
+        .send({ message: 'Нельзя удалить чужую карточку' });
+    }
+
+    await card.remove();
     return res.status(constants.HTTP_STATUS_NO_CONTENT).end();
   } catch (err) {
     if (err instanceof mongoose.Error.CastError) {
       return res
         .status(constants.HTTP_STATUS_BAD_REQUEST)
         .send({ message: 'Не корректный id карточки' });
-    }
-    if (err instanceof mongoose.Error.DocumentNotFoundError) {
-      return res
-        .status(constants.HTTP_STATUS_NOT_FOUND)
-        .send({ message: 'Карточка с указанным id не найдена' });
     }
     return res
       .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
