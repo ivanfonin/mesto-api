@@ -10,17 +10,19 @@ const globalErrorHandler = (err: AppError, req: Request, res: Response, next: Ne
   } = err;
 
   if (isCelebrateError(err)) {
-    const messages: string[] = [];
+    const errors: any = {};
 
     err.details.forEach((value) => {
       value.details.forEach((error) => {
-        messages.push(error.message);
+        if (error?.context?.key) {
+          errors[`${error?.context?.key}`] = error.message;
+        }
       });
     });
 
     res
       .status(constants.HTTP_STATUS_BAD_REQUEST)
-      .send({ message: `Ошибка валидации: ${messages.join('; ')}` });
+      .send({ message: 'Ошибка валидации', errors });
   }
 
   res.status(statusCode).send({
