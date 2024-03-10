@@ -48,7 +48,7 @@ interface IUserModel extends Model<IUser> {
 
 async function findUserByCredentials(this: Model<IUser>, email: string, password: string):
 Promise<IUser> {
-  const user = await this.findOne({ email });
+  const user = await this.findOne({ email }).select('+password');
 
   if (!user) {
     throw new AuthError('Неправильные почта или пароль');
