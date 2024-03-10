@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import temporaryAuthMiddleware from '../middlewares/temporaryAuthMiddleware';
+import authMiddleware from '../middlewares/auth';
 import authRouter from './auth';
 import usersRouter from './users';
 import cardsRouter from './cards';
@@ -8,11 +8,9 @@ import NotFoundError from '../errors/NotFoundError';
 
 const router = Router();
 
-// Временный мидлвар авторизации
-router.use(temporaryAuthMiddleware);
-
 // API
 router.use('/', authRouter);
+router.use(authMiddleware);
 router.use('/users', usersRouter);
 router.use('/cards', cardsRouter);
 router.use('*', () => {
