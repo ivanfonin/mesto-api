@@ -1,7 +1,9 @@
-import mongoose from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import validator from 'validator';
+import bcrypt from 'bcryptjs';
+import AuthError from '../errors/AuthError';
 
-interface IUser {
+export interface IUser {
   _id: string;
   name: string;
   about: string;
@@ -37,4 +39,28 @@ const userSchema = new mongoose.Schema<IUser>({
   },
 });
 
-export default mongoose.model<IUser>('user', userSchema);
+// Интерфейс модели, добавляем метод findUserByCredentials
+interface IUserModel extends Model<IUser> {
+  // eslint-disable-next-line
+  findUserByCredentials(email: string, password: string): Promise<IUser>;
+}
+
+async function findUserByCredentials(this: Model<IUser>, email: string, password: string):
+Promise<IUser> {
+  const user = await this.findOne({ email });
+
+  if (!user) {
+    throw new AuthError('Неправильные почта или пароль');
+  }
+
+  const isPasswordMatch = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordMatch) {
+    throw new AuthError('Неправильные почта или пароль');
+  }
+
+  return user;
+}
+userSchema.statics.findUserByCredentials = findUserByCredentials;
+
+export default mongoose.model<IUser, IUserModel>('user', userSchema);

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import temporaryAuthMiddleware from '../middlewares/temporaryAuthMiddleware';
+import authRouter from './auth';
 import usersRouter from './users';
 import cardsRouter from './cards';
 import globalErrorHandler from '../middlewares/globalErrorHandler';
@@ -11,6 +12,7 @@ const router = Router();
 router.use(temporaryAuthMiddleware);
 
 // API
+router.use('/', authRouter);
 router.use('/users', usersRouter);
 router.use('/cards', cardsRouter);
 router.use('*', () => {
