@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { constants } from 'http2';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { ConflictError, RequestError } from '../errors';
+import { AuthError, ConflictError, RequestError } from '../errors';
 import User, { IUser } from '../models/user';
 
 export const createUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -50,5 +50,10 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
       });
       res.send({ token });
     })
-    .catch((err) => next(new Error(err.message)));
+    .catch((err) => {
+      if (err instanceof AuthError) {
+        return next(new AuthError(err.message));
+      }
+      return next(new Error(err.message));
+    });
 };
