@@ -8,7 +8,7 @@ export interface AuthRequest extends Request {
 
 export default (req: AuthRequest, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
-  const { JWT_SECRET } = process.env;
+  const { JWT_SECRET = 'super-secret-token' } = process.env;
 
   if (!JWT_SECRET) {
     throw new AuthError('Токен обязателен');

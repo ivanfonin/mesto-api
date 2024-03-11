@@ -47,7 +47,7 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
 
 export const login = (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
-  const { JWT_SECRET } = process.env;
+  const { JWT_SECRET = 'super-secret-token' } = process.env;
 
   if (!JWT_SECRET) {
     return next(new Error('Ошибка конфигурации JWT'));
