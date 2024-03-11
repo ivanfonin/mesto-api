@@ -20,16 +20,26 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
   return User.create({
     email,
     password: hash,
-    name: name || process.env.USER_DEFAULT_NAME,
-    about: about || process.env.USER_DEFAULT_ABOUT,
-    avatar: avatar || process.env.USER_DEFAULT_AVATAR,
-  }).then((user) => res.status(constants.HTTP_STATUS_CREATED).send(user))
+    name,
+    about,
+    avatar,
+  }).then((user) => {
+    const userWithoutPassword = {
+      _id: user._id,
+      email: user.email,
+      name: user.name,
+      about: user.about,
+      avatar: user.avatar,
+      __v: user.__v,
+    };
+    res.status(constants.HTTP_STATUS_CREATED).send(userWithoutPassword);
+  })
     .catch((err) => {
       if (err.code === 11000) {
         return next(new ConflictError('Пользователь с таким email уже зарегистрирован'));
       }
       if (err instanceof mongoose.Error.ValidationError) {
-        return next(new RequestError('Ошибка валидации данных пользователя'));
+        return next(new RequestError('Не корректные данные пользователя'));
       }
       return next(new Error('На сервере произошла ошибка'));
     });
